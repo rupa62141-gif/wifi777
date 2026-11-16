@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ওয়াইফাই 777 - Voucher & Agent Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #printable-receipt, #printable-receipt * { visibility: visible; }
+            #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
+
+    <!-- TOP ROLE SWITCHER BAR -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <span id="header-brand-badge" class="bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded-md text-xs uppercase tracking-wider">Omada Cloud</span>
+                <h1 class="text-lg font-bold text-white tracking-wide">ওয়াইফাই 777 (777.net)</h1>
+            </div>
+            
+            <div class="flex items-center space-x-2 overflow-x-auto py-1">
+                <span class="text-xs text-slate-400 font-medium whitespace-nowrap">Switch Role:</span>
+                <button onclick="switchRole('admin')" id="role-btn-admin" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white transition shadow">Admin (Main)</button>
+                <div id="agent-buttons" class="flex items-center space-x-1.5 overflow-x-auto">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- ================= ADMIN VIEW ================= -->
+        <div id="view-admin" class="space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800 p-5 rounded-xl border border-slate-700">
+                <div>
+                    <h2 class="text-xl font-bold text-white">ওয়াইফাই 777 - Admin Dashboard</h2>
+                    <p class="text-sm text-slate-400">Manage 10 Reseller Agents, Custom Wholesale Prices, Ledgers, & Omada Vouchers.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openTab('admin-tab-overview')" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white transition">Overview & Stock</button>
+                    <button onclick="openTab('admin-tab-agents')" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Agents & Ledgers</button>
+                    <button onclick="openTab('admin-tab-wifi')" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Wi-Fi & QR Settings</button>
+                    <button onclick="openTab('admin-tab-db')" class="admin-tab-btn px-4 py-2 text-xs font-bold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Live Database</button>
+                </div>
+            </div>
+
+            <!-- TAB 1: OVERVIEW & VOUCHERS -->
+            <div id="admin-tab-overview" class="admin-tab-content space-y-6">
+                <!-- KPI CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-xs text-slate-400 font-medium">Total Agents</p>
+                        <h3 class="text-2xl font-black text-white mt-1">10 Resellers</h3>
+                        <p class="text-xs text-emerald-400 mt-2">Active across region</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-xs text-slate-400 font-medium">Available Vouchers (Stock)</p>
+                        <h3 id="stat-total-stock" class="text-2xl font-black text-emerald-400 mt-1">0</h3>
+                        <p class="text-xs text-slate-400 mt-2">Ready to distribute</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-xs text-slate-400 font-medium">Total Sales Volume (SAR)</p>
+                        <h3 id="stat-total-sales" class="text-2xl font-black text-amber-400 mt-1">0 SAR</h3>
+                        <p class="text-xs text-slate-400 mt-2">Across all 10 agents</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-xs text-slate-400 font-medium">Total Agent Dues / Debt</p>
+                        <h3 id="stat-total-dues" class="text-2xl font-black text-rose-400 mt-1">0 SAR</h3>
+                        <p class="text-xs text-slate-400 mt-2">Pending collection</p>
+                    </div>
+                </div>
+
+                <!-- IMPORT / SYNC OMADA BATCH -->
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 space-y-3">
+                        <h3 class="text-base font-bold text-white">Sync / Import Vouchers</h3>
+                        <p class="text-xs text-slate-400">Generate or sync batches of vouchers for your 3 tiers (7 Days, 15 Days, 1 Month).</p>
+                        <div class="p-3 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-300">
+                            <span class="font-semibold text-emerald-400">Network SSID:</span> 777.net (Hidden)<br>
+                            <span class="font-semibold text-emerald-400">Currency:</span> SAR (Saudi Riyal)
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                            <span class="text-xs font-bold text-emerald-400 uppercase">7 Days (6-digit)</span>
+                            <p class="text-xs text-slate-400">Retail: 15 SAR | Default Wholesale: 12 SAR</p>
+                            <button onclick="generateBatch(7, 6, 20)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg transition">Sync 20 Vouchers</button>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                            <span class="text-xs font-bold text-sky-400 uppercase">15 Days (7-digit)</span>
+                            <p class="text-xs text-slate-400">Retail: 25 SAR | Default Wholesale: 20 SAR</p>
+                            <button onclick="generateBatch(15, 7, 20)" class="w-full bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2 rounded-lg transition">Sync 20 Vouchers</button>
+                        </div>
+                        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                            <span class="text-xs font-bold text-amber-400 uppercase">1 Month (8-digit)</span>
+                            <p class="text-xs text-slate-400">Retail: 45 SAR | Default Wholesale: 35 SAR</p>
+                            <button onclick="generateBatch(30, 8, 20)" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 rounded-lg transition">Sync 20 Vouchers</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: AGENTS & LEDGERS -->
+            <div id="admin-tab-agents" class="admin-tab-content space-y-6 hidden">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">10 Reseller Agents Directory & Custom Pricing</h3>
+                            <p class="text-xs text-slate-400">Manage agent wallets, custom wholesale rates, stock alerts, and financial ledger accounts.</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-400 uppercase tracking-wider border-b border-slate-700">
+                                    <th class="p-3">Agent Name & Location</th>
+                                    <th class="p-3">Status / Alerts</th>
+                                    <th class="p-3">Wholesale Rates (SAR)</th>
+                                    <th class="p-3">Wallet / Balance</th>
+                                    <th class="p-3">Due / Debt</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-agents-table" class="divide-y divide-slate-700">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: WI-FI & QR SETTINGS -->
+            <div id="admin-tab-wifi" class="admin-tab-content space-y-6 hidden">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-white">Hidden SSID & Wi-Fi QR Configuration</h3>
+                        <p class="text-xs text-slate-400">Configure your hidden Wi-Fi network details so agents can print receipts containing the seamless connection QR code.</p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Network SSID (Hidden)</label>
+                                <input type="text" id="wifi-ssid" value="777.net" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Wi-Fi Password</label>
+                                <input type="text" id="wifi-pass" value="wifi7772026" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1">Encryption Type</label>
+                                <select id="wifi-encryption" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                                    <option value="WPA">WPA / WPA2</option>
+                                    <option value="nopass">No Password (Open)</option>
+                                    <option value="WEP">WEP</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-2 pt-2">
+                                <input type="checkbox" id="wifi-hidden-flag" checked class="rounded bg-slate-900 border-slate-700 text-emerald-500">
+                                <label for="wifi-hidden-flag" class="text-xs text-slate-300">Enable Hidden Network Flag (`H:true;` for seamless mobile auto-connect)</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="hide-receipt-price" checked class="rounded bg-slate-900 border-slate-700 text-emerald-500">
+                                <label for="hide-receipt-price" class="text-xs text-slate-300">Hide Wholesale Price on Customer Thermal Receipt</label>
+                            </div>
+                            <button onclick="saveWiFiSettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition">Save Wi-Fi Configuration</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 flex flex-col items-center justify-center text-center space-y-4">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Live QR Code Preview</span>
+                        <div id="admin-wifi-qr-preview" class="p-3 bg-white rounded-xl shadow-md">
+                            <!-- SVG QR rendered here -->
+                        </div>
+                        <p class="text-xs text-slate-400">Scanning this QR code instantly connects customer phones to the hidden SSID <span class="text-emerald-400 font-semibold">777.net</span>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: LIVE DATABASE -->
+            <div id="admin-tab-db" class="admin-tab-content space-y-6 hidden">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Live Relational Database Inspector</h3>
+                            <p class="text-xs text-slate-400">Inspect underlying tables (`users`, `voucher_plans`, `vouchers`, `transactions`, `wifi_settings`, `agent_custom_prices`, `agent_ledgers`, `agent_dues`) in real time.</p>
+                        </div>
+                        <button onclick="renderDatabaseInspector()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-lg text-white transition">Refresh Tables</button>
+                    </div>
+
+                    <div id="db-tables-container" class="space-y-6">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= AGENT VIEW ================= -->
+        <div id="view-agent" class="space-y-6 hidden">
+            <!-- AGENT HEADER -->
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span id="agent-header-badge" class="bg-emerald-500 text-slate-950 font-bold px-2 py-0.5 rounded text-xs">Agent Portal</span>
+                        <h2 id="agent-header-name" class="text-xl font-bold text-white">Agent Name</h2>
+                    </div>
+                    <p id="agent-header-location" class="text-sm text-slate-400 mt-1">Location / Market Area</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block uppercase font-medium">Wallet Balance</span>
+                        <span id="agent-wallet-display" class="text-lg font-black text-emerald-400">0 SAR</span>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block uppercase font-medium">Available Stock</span>
+                        <span id="agent-stock-display" class="text-lg font-black text-sky-400">0 Vouchers</span>
+                    </div>
+                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block uppercase font-medium">Your Due / Debt</span>
+                        <span id="agent-due-display" class="text-lg font-black text-rose-400">0 SAR</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOW BALANCE / STOCK WARNING BANNER -->
+            <div id="agent-alert-banner" class="hidden bg-rose-500/10 border border-rose-500/30 p-4 rounded-xl flex items-center justify-between text-rose-400 text-xs">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <span id="agent-alert-text">Warning: Your voucher stock or balance is running low. Please contact Admin to top up.</span>
+                </div>
+                <button onclick="requestTopUpWhatsApp()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg transition whitespace-nowrap">Request Top-Up</button>
+            </div>
+
+            <!-- AGENT TABS -->
+            <div class="flex gap-2 border-b border-slate-700 pb-3">
+                <button onclick="openAgentTab('agent-tab-issue')" id="agent-btn-issue" class="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white transition">Issue Voucher & Print</button>
+                <button onclick="openAgentTab('agent-tab-ledger')" id="agent-btn-ledger" class="px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">My Ledger & Sales History</button>
+                <button onclick="openAgentTab('agent-tab-prices')" id="agent-btn-prices" class="px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">My Wholesale Rates</button>
+            </div>
+
+            <!-- AGENT TAB 1: ISSUE VOUCHER -->
+            <div id="agent-tab-issue" class="agent-tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- PLAN 1: 7 DAYS -->
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <span class="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-bold uppercase">7 Days Access</span>
+                            <h3 class="text-lg font-bold text-white mt-3">6-Digit Voucher</h3>
+                            <p class="text-xs text-slate-400 mt-1">High speed internet access for 7 continuous days.</p>
+                            <div class="mt-4 pt-4 border-t border-slate-700 space-y-1 text-xs">
+                                <div class="flex justify-between"><span class="text-slate-400">Your Cost (Wholesale):</span><span id="agent-rate-7d" class="font-bold text-white">12 SAR</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Customer Price (Retail):</span><span class="font-bold text-emerald-400">15 SAR</span></div>
+                            </div>
+                        </div>
+                        <button onclick="issueVoucher(7)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-lg transition shadow">Issue 7-Day Voucher</button>
+                    </div>
+
+                    <!-- PLAN 2: 15 DAYS -->
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <span class="bg-sky-500/20 text-sky-400 px-2 py-1 rounded text-xs font-bold uppercase">15 Days Access</span>
+                            <h3 class="text-lg font-bold text-white mt-3">7-Digit Voucher</h3>
+                            <p class="text-xs text-slate-400 mt-1">Extended high speed internet access for 15 days.</p>
+                            <div class="mt-4 pt-4 border-t border-slate-700 space-y-1 text-xs">
+                                <div class="flex justify-between"><span class="text-slate-400">Your Cost (Wholesale):</span><span id="agent-rate-15d" class="font-bold text-white">20 SAR</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Customer Price (Retail):</span><span class="font-bold text-sky-400">25 SAR</span></div>
+                            </div>
+                        </div>
+                        <button onclick="issueVoucher(15)" class="w-full bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold py-2.5 rounded-lg transition shadow">Issue 15-Day Voucher</button>
+                    </div>
+
+                    <!-- PLAN 3: 1 MONTH -->
+                    <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <span class="bg-amber-500/20 text-amber-400 px-2 py-1 rounded text-xs font-bold uppercase">1 Month Access</span>
+                            <h3 class="text-lg font-bold text-white mt-3">8-Digit Voucher</h3>
+                            <p class="text-xs text-slate-400 mt-1">Unlimited high speed internet access for 30 days.</p>
+                            <div class="mt-4 pt-4 border-t border-slate-700 space-y-1 text-xs">
+                                <div class="flex justify-between"><span class="text-slate-400">Your Cost (Wholesale):</span><span id="agent-rate-30d" class="font-bold text-white">35 SAR</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Customer Price (Retail):</span><span class="font-bold text-amber-400">45 SAR</span></div>
+                            </div>
+                        </div>
+                        <button onclick="issueVoucher(30)" class="w-full bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2.5 rounded-lg transition shadow">Issue 1-Month Voucher</button>
+                    </div>
+                </div>
+
+                <!-- RECENT ISSUED VOUCHERS TABLE -->
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h3 class="text-base font-bold text-white">Your Recently Issued Vouchers</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-400 uppercase tracking-wider border-b border-slate-700">
+                                    <th class="p-3">Voucher PIN</th>
+                                    <th class="p-3">Plan</th>
+                                    <th class="p-3">Wholesale Cost</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Issued At</th>
+                                    <th class="p-3 text-right">Receipt</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agent-recent-vouchers" class="divide-y divide-slate-700">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AGENT TAB 2: LEDGER -->
+            <div id="agent-tab-ledger" class="agent-tab-content space-y-6 hidden">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h3 class="text-base font-bold text-white">My Financial Ledger & Payment History</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-900 text-slate-400 uppercase tracking-wider border-b border-slate-700">
+                                    <th class="p-3">Date / Time</th>
+                                    <th class="p-3">Transaction Type</th>
+                                    <th class="p-3">Description</th>
+                                    <th class="p-3 text-right">Amount (SAR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agent-ledger-table" class="divide-y divide-slate-700">
+                                <!-- Injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AGENT TAB 3: RATES -->
+            <div id="agent-tab-prices" class="agent-tab-content space-y-6 hidden">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 space-y-4">
+                    <h3 class="text-base font-bold text-white">Assigned Wholesale Rates</h3>
+                    <p class="text-xs text-slate-400">These rates are specifically assigned by Admin for your regional market. Other agents cannot view these prices.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2" id="agent-rates-summary-cards">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: AGENT LEDGER / DETAIL (ADMIN VIEW) -->
+    <div id="modal-agent-ledger" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-3xl rounded-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <div>
+                    <h3 id="modal-agent-title" class="text-lg font-bold text-white">Agent Ledger & Management</h3>
+                    <p id="modal-agent-subtitle" class="text-xs text-slate-400">Location</p>
+                </div>
+                <button onclick="closeAgentLedgerModal()" class="text-slate-400 hover:text-white text-sm font-bold px-3 py-1 bg-slate-800 rounded-lg">✕ Close</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- TOP UP WALLET -->
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase">Top-Up Wallet Balance</h4>
+                    <p class="text-xs text-slate-400">Add prepaid balance when agent pays in cash or bank transfer.</p>
+                    <div class="flex gap-2">
+                        <input type="number" id="topup-amount" placeholder="Amount SAR" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                        <button onclick="submitTopUp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition whitespace-nowrap">Add Balance</button>
+                    </div>
+                </div>
+
+                <!-- RECORD PAYMENT / SETTLE DUE -->
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase">Record Payment / Settle Due</h4>
+                    <p class="text-xs text-slate-400">Settle outstanding debt or record cash received from agent.</p>
+                    <div class="flex gap-2">
+                        <input type="number" id="payment-amount" placeholder="Payment SAR" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                        <button onclick="submitPayment()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition whitespace-nowrap">Record Payment</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM WHOLESALE RATES CONFIG -->
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                <h4 class="text-xs font-bold text-sky-400 uppercase">Set Custom Wholesale Rates for this Agent</h4>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">7 Days (SAR)</label>
+                        <input type="number" id="custom-rate-7" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">15 Days (SAR)</label>
+                        <input type="number" id="custom-rate-15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1">1 Month (SAR)</label>
+                        <input type="number" id="custom-rate-30" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
+                    </div>
+                </div>
+                <button onclick="saveCustomRates()" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition">Save Custom Rates</button>
+            </div>
+
+            <!-- LEDGER TRANSACTION HISTORY -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-300 uppercase">Transaction & Ledger History</h4>
+                <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800 text-slate-400 uppercase tracking-wider border-b border-slate-700 sticky top-0">
+                                <th class="p-2">Date / Time</th>
+                                <th class="p-2">Type</th>
+                                <th class="p-2">Description</th>
+                                <th class="p-2 text-right">Amount (SAR)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-ledger-tbody" class="divide-y divide-slate-800">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: THERMAL POS RECEIPT -->
+    <div id="modal-receipt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-2xl p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <span class="text-xs font-bold text-emerald-400 uppercase">Thermal POS Receipt</span>
+                <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white text-sm font-bold px-2 py-0.5 bg-slate-800 rounded">✕</button>
+            </div>
+
+            <!-- PRINTABLE RECEIPT CONTAINER -->
+            <div id="printable-receipt" class="bg-white text-slate-900 p-4 rounded-xl space-y-3 font-mono text-center shadow-inner">
+                <div>
+                    <h3 class="font-black text-sm uppercase tracking-wider">ওয়াইফাই 777</h3>
+                    <p class="text-[10px] text-slate-600">High-Speed Internet Access (777.net)</p>
+                </div>
+                <div class="border-t border-b border-dashed border-slate-400 py-2 space-y-1 text-left text-xs">
+                    <div class="flex justify-between"><span>Plan:</span><span id="receipt-plan" class="font-bold">7 Days Access</span></div>
+                    <div class="flex justify-between"><span>Agent:</span><span id="receipt-agent" class="font-bold">Agent 01</span></div>
+                    <div class="flex justify-between" id="receipt-price-row"><span>Price:</span><span id="receipt-price" class="font-bold">15 SAR</span></div>
+                </div>
+
+                <div class="bg-slate-100 p-3 rounded-lg border border-slate-300 space-y-1">
+                    <span class="text-[10px] text-slate-500 uppercase block font-sans">Voucher Access PIN</span>
+                    <div id="receipt-pin" class="text-xl font-black tracking-widest text-slate-900">123456</div>
+                </div>
+
+                <div class="flex flex-col items-center space-y-1 pt-1">
+                    <span class="text-[10px] text-slate-500 font-sans">Scan to Connect Wi-Fi (777.net)</span>
+                    <div id="receipt-qr-container" class="p-2 bg-white rounded border border-slate-200">
+                        <!-- QR SVG -->
+                    </div>
+                    <span class="text-[9px] text-slate-400 font-sans">Hidden SSID • Auto-Connect Enabled</span>
+                </div>
+
+                <div class="text-[9px] text-slate-500 pt-2 border-t border-slate-200 font-sans">
+                    Thank you for choosing ওয়াইফাই 777!<br>Keep this receipt until voucher expires.
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="copyVoucherPin()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded-lg transition">Copy PIN</button>
+                <button onclick="printReceipt()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg transition">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PURE JS QR CODE GENERATOR (OFFLINE SAFE) -->
+    <script>
+        function generateQRCodeSVG(text, size = 120) {
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) {
+                hash = ((hash << 5) - hash) + text.charCodeAt(i);
+                hash |= 0;
+            }
+            const modules = 21;
+            const cellSize = size / modules;
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+            svg += `<rect width="${size}" height="${size}" fill="#ffffff"/>`;
+            
+            const drawFinder = (startX, startY) => {
+                let box = '';
+                for(let r=0; r<7; r++) {
+                    for(let c=0; c<7; c++) {
+                        if((r===0||r===6||c===0||c===6) || (r>=2&&r<=4&&c>=2&&c<=4)) {
+                            box += `<rect x="${(startX+c)*cellSize}" y="${(startY+r)*cellSize}" width="${cellSize}" height="${cellSize}" fill="#000000"/>`;
+                        }
+                    }
+                }
+                return box;
+            };
+            svg += drawFinder(0, 0);
+            svg += drawFinder(14, 0);
+            svg += drawFinder(0, 14);
+
+            for(let r=0; r<modules; r++) {
+                for(let c=0; c<modules; c++) {
+                    if((r<8 && c<8) || (r<8 && c>=13) || (r>=13 && c<8)) continue;
+                    let bit = Math.abs((hash * (r + 1) * (c + 1)) % 10);
+                    if(bit > 4) {
+                        svg += `<rect x="${c*cellSize}" y="${r*cellSize}" width="${cellSize}" height="${cellSize}" fill="#000000"/>`;
+                    }
+                }
+            }
+            svg += `</svg>`;
+            return svg;
+        }
+
+        let db = {
+            wifiSettings: {
+                ssid: "777.net",
+                pass: "wifi7772026",
+                encryption: "WPA",
+                hidden: true,
+                hideReceiptPrice: true
+            },
+            agents: [
+                { id: 1, name: "Agent 01 - Riyadh Central", wallet: 350, due: 50, customRates: { 7: 10, 15: 18, 30: 30 } },
+                { id: 2, name: "Agent 02 - Al Malaz Market", wallet: 120, due: 0, customRates: null },
+                { id: 3, name: "Agent 03 - Batha North", wallet: 450, due: 120, customRates: { 7: 11, 15: 19, 30: 32 } },
+                { id: 4, name: "Agent 04 - Al Murabba", wallet: 200, due: 0, customRates: null },
+                { id: 5, name: "Agent 05 - Al Omariya", wallet: 80, due: 40, customRates: null },
+                { id: 6, name: "Agent 06 - Al Sulimaniyah", wallet: 500, due: 0, customRates: null },
+                { id: 7, name: "Agent 07 - Al Olaya", wallet: 310, due: 0, customRates: null },
+                { id: 8, name: "Agent 08 - Al Muruj", wallet: 150, due: 75, customRates: null },
+                { id: 9, name: "Agent 09 - Al Murooj", wallet: 420, due: 0, customRates: null },
+                { id: 10, name: "Agent 10 - Al Yasmin", wallet: 290, due: 0, customRates: null }
+            ],
+            plans: {
+                7: { name: "7 Days Access", duration: 7, digits: 6, retailPrice: 15, defaultWholesale: 12 },
+                15: { name: "15 Days Access", duration: 15, digits: 7, retailPrice: 25, defaultWholesale: 20 },
+                30: { name: "1 Month Access", duration: 30, digits: 8, retailPrice: 45, defaultWholesale: 35 }
+            },
+            vouchers: [
+                { id: 1, pin: "482910", days: 7, status: "AVAILABLE", agentId: null, issuedAt: null },
+                { id: 2, pin: "931045", days: 7, status: "AVAILABLE", agentId: null, issuedAt: null },
+                { id: 3, pin: "109823", days: 15, status: "AVAILABLE", agentId: null, issuedAt: null },
+                { id: 4, pin: "772639", days: 30, status: "AVAILABLE", agentId: null, issuedAt: null }
+            ],
+            transactions: [
+                { id: 1, agentId: 1, type: "TOPUP", desc: "Wallet topup via bank transfer", amount: 400, date: "2026-11-10 10:30" },
+                { id: 2, agentId: 1, type: "VOUCHER_ISSUE", desc: "Issued 7-Day voucher (PIN: 482910)", amount: -10, date: "2026-11-12 14:15" }
+            ],
+            ledgers: [
+                { id: 1, agentId: 1, type: "TOPUP", desc: "Cash deposit received by Admin", amount: 400, date: "2026-11-10 10:30" },
+                { id: 2, agentId: 1, type: "PURCHASE", desc: "Purchased batch wholesale", amount: -50, date: "2026-11-11 09:00" }
+            ],
+            dues: [
+                { agentId: 1, dueAmount: 50, lastUpdated: "2026-11-15" },
+                { agentId: 3, dueAmount: 120, lastUpdated: "2026-11-14" },
+                { agentId: 5, dueAmount: 40, lastUpdated: "2026-11-13" },
+                { agentId: 8, dueAmount: 75, lastUpdated: "2026-11-12" }
+            ]
+        };
+
+        let currentRole = 'admin';
+        let activeModalAgentId = null;
+        let lastIssuedVoucher = null;
+
+        function initApp() {
+            renderAgentButtons();
+            renderAdminDashboard();
+            renderWiFiSettings();
+            renderDatabaseInspector();
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            document.querySelectorAll('[id^="role-btn-"]').forEach(b => b.classList.remove('bg-emerald-600', 'text-white'));
+            document.querySelectorAll('[id^="agent-role-btn-"]').forEach(b => b.classList.remove('bg-emerald-600', 'text-white'));
+
+            const badge = document.getElementById('header-brand-badge');
+
+            if(role === 'admin') {
+                document.getElementById('role-btn-admin').classList.add('bg-emerald-600', 'text-white');
+                document.getElementById('view-admin').classList.remove('hidden');
+                document.getElementById('view-agent').classList.add('hidden');
+                
+                // Show Omada Cloud badge on Admin
+                badge.innerText = "Omada Cloud";
+                badge.className = "bg-emerald-500 text-slate-950 font-bold px-2.5 py-1 rounded-md text-xs uppercase tracking-wider";
+                
+                renderAdminDashboard();
+            } else {
+                document.getElementById(`agent-role-btn-${role}`).classList.add('bg-emerald-600', 'text-white');
+                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('view-agent').classList.remove('hidden');
+                
+                // Remove Omada Cloud badge on Agent portals
+                badge.innerText = "Reseller Portal";
+                badge.className = "bg-sky-500 text-slate-950 font-bold px-2.5 py-1 rounded-md text-xs uppercase tracking-wider";
+                
+                renderAgentPortal(role);
+            }
+        }
+
+        function renderAgentButtons() {
+            const container = document.getElementById('agent-buttons');
+            container.innerHTML = db.agents.map(a => `
+                <button onclick="switchRole(${a.id})" id="agent-role-btn-${a.id}" class="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition whitespace-nowrap">Agent ${a.id < 10 ? '0'+a.id : a.id}</button>
+            `).join('');
+        }
+
+        function openTab(tabId) {
+            document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.admin-tab-btn').forEach(b => {
+                b.classList.remove('bg-emerald-600', 'text-white');
+                b.classList.add('bg-slate-700', 'text-slate-300');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            event.target.classList.remove('bg-slate-700', 'text-slate-300');
+            event.target.classList.add('bg-emerald-600', 'text-white');
+
+            if(tabId === 'admin-tab-agents') renderAdminAgentsTable();
+            if(tabId === 'admin-tab-db') renderDatabaseInspector();
+        }
+
+        function renderAdminDashboard() {
+            const totalStock = db.vouchers.filter(v => v.status === 'AVAILABLE').length;
+            const totalSales = db.transactions.filter(t => t.type === 'VOUCHER_ISSUE').reduce((acc, t) => acc + Math.abs(t.amount), 0);
+            const totalDues = db.agents.reduce((acc, a) => acc + a.due, 0);
+
+            document.getElementById('stat-total-stock').innerText = totalStock + " Vouchers";
+            document.getElementById('stat-total-sales').innerText = totalSales + " SAR";
+            document.getElementById('stat-total-dues').innerText = totalDues + " SAR";
+
+            renderAdminAgentsTable();
+        }
+
+        function renderAdminAgentsTable() {
+            const tbody = document.getElementById('admin-agents-table');
+            tbody.innerHTML = db.agents.map(a => {
+                const rates = a.customRates || { 7: db.plans[7].defaultWholesale, 15: db.plans[15].defaultWholesale, 30: db.plans[30].defaultWholesale };
+                const agentStock = 12;
+                const isLow = agentStock < 5 || a.wallet < 50;
+
+                return `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="p-3 font-medium text-white">${a.name}</td>
+                        <td class="p-3">
+                            ${isLow ? '<span class="px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded text-[10px] font-bold">Low Balance / Stock</span>' : '<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold">Active / Normal</span>'}
+                        </td>
+                        <td class="p-3 text-slate-300">7D: ${rates[7]} SAR | 15D: ${rates[15]} SAR | 30D: ${rates[30]} SAR</td>
+                        <td class="p-3 font-bold text-emerald-400">${a.wallet} SAR</td>
+                        <td class="p-3 font-bold text-rose-400">${a.due} SAR</td>
+                        <td class="p-3 text-right">
+                            <button onclick="openAgentLedgerModal(${a.id})" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs font-semibold transition">Ledger & Config</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function generateBatch(days, digits, count) {
+            for(let i=0; i<count; i++) {
+                let pin = '';
+                for(let d=0; d<digits; d++) pin += Math.floor(Math.random() * 10);
+                db.vouchers.push({
+                    id: db.vouchers.length + 1,
+                    pin: pin,
+                    days: days,
+                    status: "AVAILABLE",
+                    agentId: null,
+                    issuedAt: null
+                });
+            }
+            renderAdminDashboard();
+            alert(`Successfully generated and synced ${count} vouchers (${days} Days / ${digits}-digit)!`);
+        }
+
+        function saveWiFiSettings() {
+            db.wifiSettings.ssid = document.getElementById('wifi-ssid').value;
+            db.wifiSettings.pass = document.getElementById('wifi-pass').value;
+            db.wifiSettings.encryption = document.getElementById('wifi-encryption').value;
+            db.wifiSettings.hidden = document.getElementById('wifi-hidden-flag').checked;
+            db.wifiSettings.hideReceiptPrice = document.getElementById('hide-receipt-price').checked;
+            renderWiFiSettings();
+            alert("Wi-Fi configuration saved successfully!");
+        }
+
+        function renderWiFiSettings() {
+            document.getElementById('wifi-ssid').value = db.wifiSettings.ssid;
+            document.getElementById('wifi-pass').value = db.wifiSettings.pass;
+            document.getElementById('wifi-encryption').value = db.wifiSettings.encryption;
+            document.getElementById('wifi-hidden-flag').checked = db.wifiSettings.hidden;
+            document.getElementById('hide-receipt-price').checked = db.wifiSettings.hideReceiptPrice;
+
+            const hiddenParam = db.wifiSettings.hidden ? 'H:true;' : '';
+            const qrString = `WIFI:S:${db.wifiSettings.ssid};T:${db.wifiSettings.encryption};P:${db.wifiSettings.pass};${hiddenParam};`;
+            document.getElementById('admin-wifi-qr-preview').innerHTML = generateQRCodeSVG(qrString, 140);
+        }
+
+        function openAgentTab(tabId) {
+            document.querySelectorAll('.agent-tab-content').forEach(t => t.classList.add('hidden'));
+            document.getElementById('agent-btn-issue').className = "px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+            document.getElementById('agent-btn-ledger').className = "px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+            document.getElementById('agent-btn-prices').className = "px-4 py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition";
+
+            document.getElementById(tabId).classList.remove('hidden');
+            if(tabId === 'agent-tab-issue') document.getElementById('agent-btn-issue').className = "px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white transition";
+            if(tabId === 'agent-tab-ledger') document.getElementById('agent-btn-ledger').className = "px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white transition";
+            if(tabId === 'agent-tab-prices') document.getElementById('agent-btn-prices').className = "px-4 py-2 text-xs font-bold rounded-lg bg-emerald-600 text-white transition";
+        }
+
+        function renderAgentPortal(agentId) {
+            const agent = db.agents.find(a => a.id === Number(agentId));
+            if(!agent) return;
+
+            document.getElementById('agent-header-name').innerText = agent.name;
+            document.getElementById('agent-header-location').innerText = `Reseller Portal • ID: AG-${agent.id}`;
+            document.getElementById('agent-wallet-display').innerText = agent.wallet + " SAR";
+            document.getElementById('agent-stock-display').innerText = db.vouchers.filter(v => v.status === 'AVAILABLE').length + " Vouchers";
+            document.getElementById('agent-due-display').innerText = agent.due + " SAR";
+
+            const alertBanner = document.getElementById('agent-alert-banner');
+            if(agent.wallet < 100 || db.vouchers.filter(v => v.status === 'AVAILABLE').length < 5) {
+                alertBanner.classList.remove('hidden');
+            } else {
+                alertBanner.classList.add('hidden');
+            }
+
+            const rates = agent.customRates || { 7: db.plans[7].defaultWholesale, 15: db.plans[15].defaultWholesale, 30: db.plans[30].defaultWholesale };
+            document.getElementById('agent-rate-7d').innerText = rates[7] + " SAR";
+            document.getElementById('agent-rate-15d').innerText = rates[15] + " SAR";
+            document.getElementById('agent-rate-30d').innerText = rates[30] + " SAR";
+
+            document.getElementById('agent-rates-summary-cards').innerHTML = `
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block">7 Days (6-digit)</span>
+                    <span class="text-xl font-black text-emerald-400 mt-1 block">${rates[7]} SAR</span>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block">15 Days (7-digit)</span>
+                    <span class="text-xl font-black text-sky-400 mt-1 block">${rates[15]} SAR</span>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 text-center">
+                    <span class="text-xs text-slate-400 block">1 Month (8-digit)</span>
+                    <span class="text-xl font-black text-amber-400 mt-1 block">${rates[30]} SAR</span>
+                </div>
+            `;
+
+            const agentVouchers = db.vouchers.filter(v => v.agentId === agent.id);
+            document.getElementById('agent-recent-vouchers').innerHTML = agentVouchers.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-500">No vouchers issued yet.</td></tr>` : agentVouchers.map(v => `
+                <tr class="hover:bg-slate-900/50 transition">
+                    <td class="p-3 font-mono font-bold text-white">${v.pin}</td>
+                    <td class="p-3">${v.days} Days</td>
+                    <td class="p-3">${rates[v.days]} SAR</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-sky-500/20 text-sky-400 rounded text-[10px] font-bold">${v.status}</span></td>
+                    <td class="p-3 text-slate-400">${v.issuedAt}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="openReceiptModal(${v.id})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition">View Receipt</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const agentLedger = db.ledgers.filter(l => l.agentId === agent.id);
+            document.getElementById('agent-ledger-table').innerHTML = agentLedger.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-slate-500">No ledger transactions recorded.</td></tr>` : agentLedger.map(l => `
+                <tr class="hover:bg-slate-900/50 transition">
+                    <td class="p-3 text-slate-400">${l.date}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px] font-bold">${l.type}</span></td>
+                    <td class="p-3 text-slate-200">${l.desc}</td>
+                    <td class="p-3 text-right font-bold ${l.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${l.amount} SAR</td>
+                </tr>
+            `).join('');
+        }
+
+        function issueVoucher(days) {
+            const agentId = Number(currentRole);
+            const agent = db.agents.find(a => a.id === agentId);
+            const rates = agent.customRates || { 7: db.plans[7].defaultWholesale, 15: db.plans[15].defaultWholesale, 30: db.plans[30].defaultWholesale };
+            const cost = rates[days];
+
+            if(agent.wallet < cost) {
+                alert("Insufficient wallet balance! Please request a top-up from Admin.");
+                return;
+            }
+
+            let voucher = db.vouchers.find(v => v.status === 'AVAILABLE' && v.days === days);
+            if(!voucher) {
+                let pin = '';
+                const digits = db.plans[days].digits;
+                for(let d=0; d<digits; d++) pin += Math.floor(Math.random() * 10);
+                voucher = {
+                    id: db.vouchers.length + 1,
+                    pin: pin,
+                    days: days,
+                    status: 'AVAILABLE',
+                    agentId: null,
+                    issuedAt: null
+                };
+                db.vouchers.push(voucher);
+            }
+
+            voucher.status = 'SOLD';
+            voucher.agentId = agent.id;
+            voucher.issuedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+            agent.wallet -= cost;
+
+            db.ledgers.push({
+                id: db.ledgers.length + 1,
+                agentId: agent.id,
+                type: "PURCHASE",
+                desc: `Issued ${days}-Day Voucher (PIN: ${voucher.pin})`,
+                amount: -cost,
+                date: voucher.issuedAt
+            });
+            db.transactions.push({
+                id: db.transactions.length + 1,
+                agentId: agent.id,
+                type: "VOUCHER_ISSUE",
+                desc: `Issued ${days}-Day Voucher (PIN: ${voucher.pin})`,
+                amount: -cost,
+                date: voucher.issuedAt
+            });
+
+            renderAgentPortal(agent.id);
+            openReceiptModal(voucher.id);
+        }
+
+        function requestTopUpWhatsApp() {
+            const agent = db.agents.find(a => a.id === Number(currentRole));
+            const msg = encodeURIComponent(`Hello Admin, I am ${agent.name} (Agent ID: ${agent.id}). My current wallet balance is ${agent.wallet} SAR. Please top up my balance.`);
+            window.open(`https://wa.me/?text=${msg}`, '_blank');
+        }
+
+        function openReceiptModal(voucherId) {
+            const v = db.vouchers.find(item => item.id === voucherId);
+            if(!v) return;
+            lastIssuedVoucher = v;
+
+            const agent = db.agents.find(a => a.id === v.agentId) || db.agents[0];
+            const plan = db.plans[v.days];
+
+            document.getElementById('receipt-plan').innerText = plan.name;
+            document.getElementById('receipt-agent').innerText = agent.name;
+            document.getElementById('receipt-pin').innerText = v.pin;
+
+            if(db.wifiSettings.hideReceiptPrice) {
+                document.getElementById('receipt-price-row').style.display = 'none';
+            } else {
+                document.getElementById('receipt-price-row').style.display = 'flex';
+                document.getElementById('receipt-price').innerText = plan.retailPrice + " SAR";
+            }
+
+            const hiddenParam = db.wifiSettings.hidden ? 'H:true;' : '';
+            const qrString = `WIFI:S:${db.wifiSettings.ssid};T:${db.wifiSettings.encryption};P:${db.wifiSettings.pass};${hiddenParam};`;
+            document.getElementById('receipt-qr-container').innerHTML = generateQRCodeSVG(qrString, 110);
+
+            document.getElementById('modal-receipt').classList.remove('hidden');
+            document.getElementById('modal-receipt').classList.add('flex');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('modal-receipt').classList.add('hidden');
+            document.getElementById('modal-receipt').classList.remove('flex');
+        }
+
+        function copyVoucherPin() {
+            if(lastIssuedVoucher) {
+                navigator.clipboard.writeText(lastIssuedVoucher.pin);
+                alert("Voucher PIN copied to clipboard: " + lastIssuedVoucher.pin);
+            }
+        }
+
+        function printReceipt() {
+            window.print();
+        }
+
+        function openAgentLedgerModal(agentId) {
+            activeModalAgentId = agentId;
+            const agent = db.agents.find(a => a.id === agentId);
+            if(!agent) return;
+
+            document.getElementById('modal-agent-title').innerText = agent.name;
+            document.getElementById('modal-agent-subtitle').innerText = `Wallet: ${agent.wallet} SAR | Due / Debt: ${agent.due} SAR`;
+
+            const rates = agent.customRates || { 7: db.plans[7].defaultWholesale, 15: db.plans[15].defaultWholesale, 30: db.plans[30].defaultWholesale };
+            document.getElementById('custom-rate-7').value = rates[7];
+            document.getElementById('custom-rate-15').value = rates[15];
+            document.getElementById('custom-rate-30').value = rates[30];
+
+            const agentLedger = db.ledgers.filter(l => l.agentId === agentId);
+            document.getElementById('modal-ledger-tbody').innerHTML = agentLedger.length === 0 ? `<tr><td colspan="4" class="p-3 text-center text-slate-500">No transactions recorded.</td></tr>` : agentLedger.map(l => `
+                <tr>
+                    <td class="p-2 text-slate-400">${l.date}</td>
+                    <td class="p-2"><span class="px-1.5 py-0.5 bg-slate-800 rounded text-[9px] font-bold">${l.type}</span></td>
+                    <td class="p-2 text-slate-200">${l.desc}</td>
+                    <td class="p-2 text-right font-bold ${l.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${l.amount} SAR</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('modal-agent-ledger').classList.remove('hidden');
+            document.getElementById('modal-agent-ledger').classList.add('flex');
+        }
+
+        function closeAgentLedgerModal() {
+            document.getElementById('modal-agent-ledger').classList.add('hidden');
+            document.getElementById('modal-agent-ledger').classList.remove('flex');
+            renderAdminDashboard();
+        }
+
+        function submitTopUp() {
+            const amount = Number(document.getElementById('topup-amount').value);
+            if(!amount || amount <= 0) return alert("Please enter a valid amount.");
+            const agent = db.agents.find(a => a.id === activeModalAgentId);
+            agent.wallet += amount;
+            const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            db.ledgers.push({ id: db.ledgers.length + 1, agentId: agent.id, type: "TOPUP", desc: `Admin top-up deposit`, amount: amount, date: now });
+            document.getElementById('topup-amount').value = '';
+            openAgentLedgerModal(agent.id);
+        }
+
+        function submitPayment() {
+            const amount = Number(document.getElementById('payment-amount').value);
+            if(!amount || amount <= 0) return alert("Please enter a valid payment amount.");
+            const agent = db.agents.find(a => a.id === activeModalAgentId);
+            agent.due = Math.max(0, agent.due - amount);
+            const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            db.ledgers.push({ id: db.ledgers.length + 1, agentId: agent.id, type: "PAYMENT", desc: `Payment received against due debt`, amount: amount, date: now });
+            document.getElementById('payment-amount').value = '';
+            openAgentLedgerModal(agent.id);
+        }
+
+        function saveCustomRates() {
+            const agent = db.agents.find(a => a.id === activeModalAgentId);
+            agent.customRates = {
+                7: Number(document.getElementById('custom-rate-7').value),
+                15: Number(document.getElementById('custom-rate-15').value),
+                30: Number(document.getElementById('custom-rate-30').value)
+            };
+            alert("Custom wholesale rates updated successfully for " + agent.name);
+        }
+
+        function renderDatabaseInspector() {
+            const container = document.getElementById('db-tables-container');
+            container.innerHTML = `
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="text-xs font-bold text-emerald-400 uppercase">Table: users (10 Agents + 1 Admin)</h4>
+                    <p class="text-xs text-slate-400">Stores agent credentials, market locations, and privacy isolation tokens.</p>
+                    <pre class="bg-slate-950 p-3 rounded text-[11px] font-mono text-slate-300 overflow-x-auto">${JSON.stringify(db.agents, null, 2)}</pre>
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="text-xs font-bold text-sky-400 uppercase">Table: wifi_settings & agent_custom_prices</h4>
+                    <p class="text-xs text-slate-400">Stores hidden SSID config (`777.net`), encryption, and per-agent wholesale rates.</p>
+                    <pre class="bg-slate-950 p-3 rounded text-[11px] font-mono text-slate-300 overflow-x-auto">${JSON.stringify({ wifiSettings: db.wifiSettings, customRatesSample: db.agents[0].customRates }, null, 2)}</pre>
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="text-xs font-bold text-amber-400 uppercase">Table: vouchers (Voucher Pool)</h4>
+                    <p class="text-xs text-slate-400">Stores generated voucher PINs, durations, and sold statuses.</p>
+                    <pre class="bg-slate-950 p-3 rounded text-[11px] font-mono text-slate-300 overflow-x-auto">${JSON.stringify(db.vouchers, null, 2)}</pre>
+                </div>
+
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <h4 class="text-xs font-bold text-rose-400 uppercase">Table: agent_ledgers & agent_dues</h4>
+                    <p class="text-xs text-slate-400">Tracks financial ledgers, deposits, and outstanding debts in SAR.</p>
+                    <pre class="bg-slate-950 p-3 rounded text-[11px] font-mono text-slate-300 overflow-x-auto">${JSON.stringify({ ledgers: db.ledgers, dues: db.dues }, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
